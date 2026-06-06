@@ -7,7 +7,7 @@ const App = ()=>{
 
     const [isHelping,setHelping]=useState(false)
     const [hasPulled,setPulled]=useState(true)
-
+    const orientation = window.screen.orientation.type.replace("-primary","")
     
 
     const { coords, isGeolocationAvailable, isGeolocationEnabled } =
@@ -25,7 +25,8 @@ const App = ()=>{
         console.log(trial1.data,trial2.data)
     } 
     const sos = async ()=>{
-        const post = await axios.post("http://localhost:5000/posts/sos",{loc:`${coords.latitude} ${coords.longitude}`})
+        const post = await axios.post("http://localhost:5000/posts/SOS",{loc:`${coords.latitude} ${coords.longitude}`})
+        console.log(post)
     }
     
     
@@ -44,12 +45,12 @@ const App = ()=>{
 
     /* <iframe src=`https://www.google.com/maps/embed?pb=!1m17!1m12!1m3!1d${152.87405777*width*cos(longitude)}!2d69.997419713793!3d69.99999998132672!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m2!1m1!2zNzDCsDAwJzAwLjAiTiA3MMKwMDAnMDAuMCJF!5e0!3m2!1sen!2sin!4v1780721032641!5m2!1sen!2sin` width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"/>  */
 
-    return <div className="w-full h-[200%] grid justify-items-center items-center grid-cols-[40%_60%]"><div className='absolute top-0 p-4 text-6xl font-mono left-0 font-black text-emerald-300'>HelpCentral.</div><a href="#helping" className='absolute w-1/4 bottom-0 p-4 text-4xl font-mono left-0 bg-amber-100 rounded-tr-full cursor-pointer' onClick={()=>setHelping(true)}>Want to provide?<br/> Click here.</a><div className='h-screen w-full grid content-center justify-items-center'><div className='text-3xl h-auto aspect-square w-[min(70%,200px)] grid content-center justify-items-center cursor-pointer rounded-full text-white bg-red-500' onClick={()=>sos()}><div>SOS</div></div></div>
+    return (orientation=="landscape")?(<div className="w-full h-[200%] grid justify-items-center items-center grid-cols-[40%_60%]"><div className='absolute top-0 p-4 text-6xl font-mono left-0 font-black text-emerald-300'>HelpCentral.</div><a href="#helping" className='absolute w-1/4 bottom-0 p-4 text-4xl font-mono left-0 bg-amber-100 rounded-tr-full cursor-pointer' onClick={()=>setHelping(true)}>Want to provide?<br/> Click here.</a><div className='h-screen w-full grid content-center justify-items-center'><div className='text-3xl h-auto aspect-square w-[min(25%,200px)] grid content-center justify-items-center cursor-pointer rounded-full text-white bg-red-500' onClick={()=>sos()}><div>SOS</div></div></div>
     <div className="h-[80%] w-auto aspect-square bg-amber-50 rounded-2xl grid grid-cols-1 grid-rows-[25%_75%] content-center">
         <div className="grid content-center h-full w-full text-center text-4xl">Need help with something specific?</div>
         <form className="w-full h-full" onSubmit={submitWant} method="POST">
             <div className="w-full h-full grid pb-4">
-                <div className="w-[80%] h-full justify-self-center grid content-center"><label className="p-2">Your Name:</label><input name="want" className="bg-pink-100 h-fit text-center w-full rounded-xl hover:placeholder:text-black placeholder:text-gray-400 focus:outline-0 focus:placeholder:text-pink-100 text-black p-2" type="text" placeholder="John Doe" required/></div>
+                <div className="w-[80%] h-full justify-self-center grid content-center"><label className="p-2">Give us a general idea of your location:</label><input name="want" className="bg-pink-100 h-fit text-center w-full rounded-xl hover:placeholder:text-black placeholder:text-gray-400 focus:outline-0 focus:placeholder:text-pink-100 text-black p-2" type="text" placeholder="The McDonalds in front of the KFC" required/></div>
                 <div className="w-[80%] h-full justify-self-center grid content-center"><label for="select" className="p-2">What do you need help with:</label><select id="select" className="bg-pink-100 outline-none focus:outline-none p-2 rounded-xl focus:rounded-b-none">
                     <option value="f">Food</option>
                     <option value="w">Water</option>
@@ -94,7 +95,32 @@ const App = ()=>{
 
     </div>):("")}
     
-    </div>
+    </div>):(
+        <div className='w-full h-[200%] grid grid-cols-1 grid-rows-2 content-center justify-items-center'>
+            <div className='absolute left-0 p-4 font-bold font-mono'>HelpCentral.</div>
+            <div className='w-full h-screen grid content-center justify-items-center'><div className='w-[80%] h-auto aspect-square bg-red-500 grid content-center justify-items-center rounded-full font-black text-3xl text-white' onClick={()=>sos()}>SOS</div></div>
+            <div className='absolute bottom-0 text-center font-semibold p-4 w-[90%] rounded-t-2xl bg-amber-100'>Need help with something specific?<br/>Scroll down</div>
+            <div className='w-full h-screen bg-green-300 grid grid-cols-1 grid-rows-1 content-center items-center justify-items-center'><div className='w-[90%] h-[80%] rounded-2xl justify-self-center content-center bg-amber-50'>
+                <form className="w-full h-full" onSubmit={submitWant} method="POST">
+                    <div className="w-full h-full grid pb-4 pt-4">
+                        <div className="w-[80%] h-full justify-self-center grid content-center"><label className="p-2">Give us a general idea of your location:</label><input name="want" className="bg-pink-100 h-fit text-center w-full rounded-xl hover:placeholder:text-black placeholder:text-gray-400 focus:outline-0 focus:placeholder:text-pink-100 text-black p-2" type="text" placeholder="The McDonalds in front of the KFC" required/></div>
+                        <div className="w-[80%] h-full justify-self-center grid content-center"><label for="select" className="p-2">What do you need help with:</label><select id="select" className="bg-pink-100 outline-none focus:outline-none p-2 rounded-xl focus:rounded-b-none">
+                            <option value="f">Food</option>
+                            <option value="w">Water</option>
+                            <option value="m">Medical Care / Medicine</option>
+                            <option value="p">Power</option>
+                        </select></div>
+                        <div className="w-[80%] h-full justify-self-center grid content-center grid-cols-1 justify-items-center">
+                            {!isGeolocationAvailable?<div>Geolocation Unavailable</div>:!isGeolocationEnabled?<div>Please Allow geolocation data</div>:<div><input id="agree" name="agree" required className="m-2" type="checkbox"/><label for="agree">Agree to share location info with HelpCentral</label></div>}
+
+                        </div>
+                        <div className="w-[80%] h-full justify-self-center grid content-center grid-cols-1 justify-items-center"><div><input id="agreeToTerms" name="agreeToTerms" required className="m-2" type="checkbox"/><label for="agreeToTerms">Agree to terms and conditions</label></div></div>
+                        <div className="w-full h-full justify-self-center grid content-center"><button className="bg-pink-100 justify-self-center p-2 w-1/2 rounded-full font-semibold text-purple-600 border-2 border-purple-600" type="submit">Submit request</button></div>
+
+                    </div>
+                </form></div>
+            </div>
+        </div>)
 }
 
 export default App
