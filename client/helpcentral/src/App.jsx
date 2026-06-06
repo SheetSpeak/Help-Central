@@ -9,7 +9,15 @@ const App = ()=>{
                 enableHighAccuracy: false,
             },
             userDecisionTimeout: 5000,
-        });
+        })
+
+    const trial = async ()=>{
+        const trial = await axios.post("http://localhost:5000/posts/provide",{loc:[coords.latitude,coords.longitude,coords.accuracy],p:"f"})
+        console.log(trial)
+    }   
+    trial()
+    
+    
     const submitWant=async (e)=>{
         e.preventDefault()
         const d = new FormData(e.target)
@@ -22,6 +30,8 @@ const App = ()=>{
 
         console.log(returned)
     }
+
+    /* <iframe src=`https://www.google.com/maps/embed?pb=!1m17!1m12!1m3!1d${152.87405777*width*cos(longitude)}!2d69.997419713793!3d69.99999998132672!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m2!1m1!2zNzDCsDAwJzAwLjAiTiA3MMKwMDAnMDAuMCJF!5e0!3m2!1sen!2sin!4v1780721032641!5m2!1sen!2sin` width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"/>  */
 
     return <div className="w-full h-screen grid items-center grid-cols-1 grid-rows-1"><div className="h-[80%] w-auto aspect-square bg-amber-50 justify-self-center rounded-2xl grid grid-cols-1 grid-rows-[30%_70%] content-center">
         <div className="justify-self-center grid content-center h-full w-full text-center text-6xl">Need Help?</div>
