@@ -100,7 +100,7 @@ const App = ()=>{
             <div className='absolute left-0 p-4 font-bold font-mono'>HelpCentral.</div>
             <div className='w-full h-screen grid content-center justify-items-center'><div className='w-[80%] h-auto aspect-square bg-red-500 grid content-center justify-items-center rounded-full font-black text-3xl text-white' onClick={()=>sos()}>SOS</div></div>
             <div className='absolute bottom-0 text-center font-semibold p-4 w-[90%] rounded-t-2xl bg-amber-100'>Need help with something specific?<br/>Scroll down</div>
-            <div className='w-full h-screen bg-green-300 grid grid-cols-1 grid-rows-1 content-center items-center justify-items-center'><div className='w-[90%] h-[80%] rounded-2xl justify-self-center content-center bg-amber-50'>
+            <div className='w-full h-screen bg-amber-100 grid grid-cols-1 grid-rows-1 content-center items-center justify-items-center'><div className='w-[90%] h-[80%] rounded-2xl justify-self-center content-center bg-amber-50'>
                 <form className="w-full h-full" onSubmit={submitWant} method="POST">
                     <div className="w-full h-full grid pb-4 pt-4">
                         <div className="w-[80%] h-full justify-self-center grid content-center"><label className="p-2">Give us a general idea of your location:</label><input name="want" className="bg-pink-100 h-fit text-center w-full rounded-xl hover:placeholder:text-black placeholder:text-gray-400 focus:outline-0 focus:placeholder:text-pink-100 text-black p-2" type="text" placeholder="The McDonalds in front of the KFC" required/></div>
@@ -120,6 +120,23 @@ const App = ()=>{
                     </div>
                 </form></div>
             </div>
+            <div className='absolute top-[200%] -translate-y-full text-center font-semibold p-4 w-[50%] rounded-t-2xl bg-green-100'>Want to help?<br/>Scroll down</div>
+            <div className='w-full h-screen bg-green-100 grid items-center justify-items-center'>{ (!hasPulled)?(
+                <div className='w-[90%] h-[95%] bg-emerald-200 rounded-2xl overflow-hidden grid grid-cols-1 grid-rows-4'>
+                <div className='w-full h-full bg-red-100 text-center content-center grid font-black text-2xl'>Food</div>
+                <div className='w-full h-full bg-blue-100 text-center content-center grid font-black text-2xl'>Water</div>
+                <div className='w-full h-full bg-green-200 text-center content-center grid font-black text-2xl'>Medicine</div>
+                <div className='w-full h-full bg-purple-100 text-center content-center grid font-black text-2xl'>Power</div>
+                </div>
+            ):(<div className='w-[90%] h-[95%] bg-emerald-200 rounded-2xl overflow-hidden grid grid-cols-1 grid-rows-[10%_90%]'>
+                <div className='w-full h-full bg-amber-100 flex'>
+                    <div>Back</div>
+                    <div>Currently on: </div>
+                </div>
+                <div className='w-full h-full overflow-y-scroll grid grid-cols-1 justify-items-center'>
+                    <div className='w-full h-fit bg-gray-100 grid grid-cols-1'><div>Name</div><iframe src={`https://www.google.com/maps/embed?pb=!1m17!1m12!1m3!1d${152.87405777*200*Math.cos(coords.longitude)}!2d69.997419713793!3d69.99999998132672!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m2!1m1!2zNzDCsDAwJzAwLjAiTiA3MMKwMDAnMDAuMCJF!5e0!3m2!1sen!2sin!4v1780721032641!5m2!1sen!2sin`} className='w-[70%] m-4 rounded-2xl h-auto aspect-square justify-self-center' allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade"/></div>
+                </div>
+            </div>) }</div>
         </div>)
 }
 
