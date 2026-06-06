@@ -21,9 +21,9 @@ app.post("/posts/request",(req,res)=>{
 })
 
 app.post("/posts/SOS",(req,res)=>{
-    const location = req.body
+    const location = req.body.loc
 
-    fs.writeFile(path.join(__dirname,"SOS",location),location,'utf8')
+    fs.writeFile(path.join(__dirname,"Requests/SOS",`${location}.txt`),location,'utf8',(err)=>console.error(err))
     res.json({accepted:true})
 })
 
@@ -32,33 +32,43 @@ const tempAsyncFunc = async (file,e)=>{
     return fileData
 }
 
-const read = (file,loc,res)=>{
-    fs.readdir(file,(err,e)=>{
-        if (err) throw err
-        else{
-            let final =[]
-            e.forEach(a => {
-                const place = path.basename(path.join(file,a),".txt").split(" ")
-                if((parseFloat(place.at(0))-loc.at(0)+parseFloat(place.at(1)-loc.at(1)))<=3){
-                    fs.readFile(path.join(file,a),'utf8',(err,data)=>{
-                        if (err) throw err
-                        else{
-                            final.push(data)
-                            console.log(final)
+const read = async (file,loc,res)=>{
+    const final ={data:[]}
+    try {
+        const dirNames = await fsp.readdir(file);
 
-                        }
-                    })
-            res.json({req:final})
+        if (dirNames.length > 0) {
+            
+            for (const fileName of dirNames) {
+                const place = path.basename(fileName, ".txt").split(" ");
+                
+                const fileLat = parseFloat(place[0])
+                const fileLng = parseFloat(place[1])
+                const targetLat = parseFloat(loc[0])
+                const targetLng = parseFloat(loc[1])
+
+                const distance = Math.sqrt(Math.pow(fileLat - targetLat, 2) + Math.pow(fileLng - targetLng, 2))
+
+                if (distance <= 0.1) {
+                    const fileContent = await fsp.readFile(path.join(file, fileName), 'utf8')
+                    final.data.push(fileContent);
                 }
-            })
+            }
+
+            res.json(final)
+
+        } else {
+            res.json({ req: null })
         }
-        
-    })
+
+    } catch (error) {
+        console.error(error)
+        res.json({ error: "Internal server error reading location data" })
+    }
+    
 }
 
 app.post("/posts/provide",(req,res)=>{
-    // const sos = read(path.join(__dirname,'SOS'),req.body.loc)
-    // console.log(sos)
     read(path.join(__dirname,'Requests',req.body.p),req.body.loc,res)
 })
 

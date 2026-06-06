@@ -11,11 +11,14 @@ const App = ()=>{
             userDecisionTimeout: 5000,
         })
 
-    const trial = async ()=>{
-        const trial = await axios.post("http://localhost:5000/posts/provide",{loc:[coords.latitude,coords.longitude,coords.accuracy],p:"f"})
-        console.log(trial)
-    }   
-    trial()
+    const provide = async ()=>{
+        const trial1 = await axios.post("http://localhost:5000/posts/provide",{loc:[coords.latitude,coords.longitude,coords.accuracy],p:"f"})
+        const trial2 = await axios.post("http://localhost:5000/posts/provide",{loc:[coords.latitude,coords.longitude,coords.accuracy],p:"SOS"})
+        console.log(trial1.data,trial2.data)
+    } 
+    const sos = async ()=>{
+        const post = await axios.post("http://localhost:5000/posts/sos",{loc:`${coords.latitude} ${coords.longitude}`})
+    }
     
     
     const submitWant=async (e)=>{
@@ -53,7 +56,7 @@ const App = ()=>{
 
             </div>
         </form>
-    </div></div>
+    </div><div className='text-3xl absolute cursor-pointer' onClick={()=>sos()}>SOS</div><div onClick={()=>provide()}>Provide</div></div>
 }
 
 export default App
