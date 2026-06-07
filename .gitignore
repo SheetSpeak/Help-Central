@@ -7,3 +7,5 @@
 /server/Requests/w/*
 /server/Requests/SOS/*
 /server/Requests/p/*
+
+!/server/Requests
