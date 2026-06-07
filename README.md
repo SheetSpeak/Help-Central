@@ -1,0 +1,1 @@
+A web app made to help people who need a help or rescue, the app sends gps data from the user in SOS conditions to a server, which then can be accessed by a person trying to help. The app is also extremely light, making it a good pick for tough situations.

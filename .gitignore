@@ -1,11 +1,3 @@
 **/node_modules
 
 **/package-lock.json
-
-/server/Requests/f/*
-/server/Requests/m/*
-/server/Requests/w/*
-/server/Requests/SOS/*
-/server/Requests/p/*
-
-!/server/Requests
