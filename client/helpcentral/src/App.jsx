@@ -6,7 +6,11 @@ const App = ()=>{
 
 
     const [isHelping,setHelping]=useState(false)
-    const [hasPulled,setPulled]=useState(true)
+    const [hasPulled,setPulled]=useState(false)
+    const [pulledData,setPulledData]=useState([])
+    const [SOSpulledData,setSOSPulledData]=useState([])
+    const [pulledFor,setForData]=useState("")
+
     const orientation = window.screen.orientation.type.replace("-primary","")
     
 
@@ -19,16 +23,52 @@ const App = ()=>{
         })
 
 
-    const provide = async ()=>{
-        const trial1 = await axios.post("http://localhost:5000/posts/provide",{loc:[coords.latitude,coords.longitude,coords.accuracy],p:"f"})
-        const trial2 = await axios.post("http://localhost:5000/posts/provide",{loc:[coords.latitude,coords.longitude,coords.accuracy],p:"SOS"})
-        console.log(trial1.data,trial2.data)
+    const provide = async (k)=>{
+        const trial1 = await axios.post("http://localhost:5000/posts/provide",{loc:[coords.latitude,coords.longitude,coords.accuracy],p:k})
+        const rawData = trial1.data.data
+        const realData = []
+        try{
+            if(!(rawData==undefined)){
+                rawData.forEach(e=>{
+                    realData.push(JSON.parse(e))
+            })
+            
+            setPulledData(realData)
+            }else{
+                setPulledData([])
+            }
+            
+        } catch(error){console.log(error)}
+        
+        (k=="f")?setForData("Food"):(k=="w")?setForData("Water"):(k=="m")?setForData("Medical Care"):setForData("Power")
+        const rawSOSData = trial1.data.SOSdata
+        const realSOSData = []
+        try{
+            if(!(rawSOSData==undefined)){
+                rawSOSData.forEach(e=>{
+                    realSOSData.push(e)
+            })
+            
+            setSOSPulledData(realSOSData)
+            }else{
+                setSOSPulledData([])
+            }
+            
+        } catch(error){console.log(error)}
+        
+        (k=="f")?setForData("Food"):(k=="w")?setForData("Water"):(k=="m")?setForData("Medical Care"):setForData("Power")
+        setPulled(true)
     } 
     const sos = async ()=>{
         const post = await axios.post("http://localhost:5000/posts/SOS",{loc:`${coords.latitude} ${coords.longitude}`})
         console.log(post)
     }
-    
+
+    const del = async(need,file)=>{
+        const sendFile = file.join(" ")
+        const post = await axios.post("http://localhost:5000/posts/delete",{need:need,file:sendFile})
+        provide(need)
+    } 
     
     const submitWant=async (e)=>{
         e.preventDefault()
@@ -36,14 +76,11 @@ const App = ()=>{
         const data = Object.fromEntries(d.entries())
         const selector = document.getElementById("select")
 
-        const final={...data,need:selector.value,location:[coords.latitude,coords.longitude,coords.accuracy]}
+        const final={...data,need:selector.value,location:[coords.latitude,coords.longitude,coords.accuracy], status:"a"}
 
         const returned = await axios.post("http://localhost:5000/posts/request",final) 
 
-        console.log(returned)
     }
-
-    /* <iframe src=`https://www.google.com/maps/embed?pb=!1m17!1m12!1m3!1d${152.87405777*width*cos(longitude)}!2d69.997419713793!3d69.99999998132672!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m2!1m1!2zNzDCsDAwJzAwLjAiTiA3MMKwMDAnMDAuMCJF!5e0!3m2!1sen!2sin!4v1780721032641!5m2!1sen!2sin` width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"/>  */
 
     return (orientation=="landscape")?(<div className="w-full h-[200%] grid justify-items-center items-center grid-cols-[40%_60%]"><div className='absolute top-0 p-4 text-6xl font-mono left-0 font-black text-emerald-300'>HelpCentral.</div><a href="#helping" className='absolute w-1/4 bottom-0 p-4 text-4xl font-mono left-0 bg-amber-100 rounded-tr-full cursor-pointer' onClick={()=>setHelping(true)}>Want to provide?<br/> Click here.</a><div className='h-screen w-full grid content-center justify-items-center'><div className='text-3xl h-auto aspect-square w-[min(25%,200px)] grid content-center justify-items-center cursor-pointer rounded-full text-white bg-red-500' onClick={()=>sos()}><div>SOS</div></div></div>
     <div className="h-[80%] w-auto aspect-square bg-amber-50 rounded-2xl grid grid-cols-1 grid-rows-[25%_75%] content-center">
@@ -70,24 +107,58 @@ const App = ()=>{
     
     {(isHelping)?(<div id='helping' className='w-full h-screen col-span-2 bg-amber-100 overflow-hidden'><div className='w-full h-full grid content-center justify-items-center'><div className='p-8 text-6xl font-bold'>Wanna help?</div>
         {(!hasPulled)?(<div className='w-[90%] aspect-video rounded-2xl overflow-hidden bg-white grid grid-cols-4 grid-rows-1'>
-                <div className='w-full h-full bg-olive-400'><div className='w-full h-full bg-olive-200 justify-items-center grid content-center text-6xl cursor-pointer hover:font-bold  transition-all hover:m-4 hover:rounded-tl-2xl'>Food</div></div>
-                <div className='w-full h-full bg-blue-400'><div className='w-full h-full bg-blue-100 justify-items-center grid content-center text-6xl cursor-pointer hover:font-bold transition-all hover:m-4 hover:rounded-tl-2xl'>Water</div></div>
-                <div className='w-full h-full bg-green-400'><div className='w-full h-full bg-green-100 justify-items-center grid content-center text-6xl cursor-pointer hover:font-bold transition-all hover:m-4 hover:rounded-tl-2xl'>Medicine</div></div>
-                <div className='w-full h-full bg-purple-400'><div className='w-full h-full bg-purple-100 justify-items-center grid content-center text-6xl cursor-pointer hover:font-bold transition-all hover:m-4 hover:rounded-tl-2xl'>Power</div></div>
+                <div className='w-full h-full bg-olive-400' onClick={()=>provide("f")}><div className='w-full h-full bg-olive-200 justify-items-center grid content-center text-6xl cursor-pointer hover:font-bold  transition-all hover:m-4 hover:rounded-tl-2xl'>Food</div></div>
+                <div className='w-full h-full bg-blue-400' onClick={()=>provide("f")}><div className='w-full h-full bg-blue-100 justify-items-center grid content-center text-6xl cursor-pointer hover:font-bold transition-all hover:m-4 hover:rounded-tl-2xl'>Water</div></div>
+                <div className='w-full h-full bg-green-400' onClick={()=>provide("f")}><div className='w-full h-full bg-green-100 justify-items-center grid content-center text-6xl cursor-pointer hover:font-bold transition-all hover:m-4 hover:rounded-tl-2xl'>Medicine</div></div>
+                <div className='w-full h-full bg-purple-400' onClick={()=>provide("f")}><div className='w-full h-full bg-purple-100 justify-items-center grid content-center text-6xl cursor-pointer hover:font-bold transition-all hover:m-4 hover:rounded-tl-2xl'>Power</div></div>
             </div>):(<div className='w-[90%] aspect-video rounded-2xl overflow-hidden bg-white grid grid-cols-[8%_92%] grid-rows-1'>
                 <div className=' h-full w-full bg-blue-400 flex flex-col justify-around'>
                     <div className='font-black text-center'>Change <br/>prefrence</div>
-                    <div className='w-auto h-1/9 aspect-square bg-red-300 cursor-pointer grid content-center justify-items-center border-red-400 hover:border-l-[1rem] transition-all hover:font-black'>Food</div>
-                    <div className='w-auto h-1/9 aspect-square bg-red-300 cursor-pointer grid content-center justify-items-center border-red-400 hover:border-l-[1rem] transition-all hover:font-black'>Food</div>
-                    <div className='w-auto h-1/9 aspect-square bg-red-300 cursor-pointer grid content-center justify-items-center border-red-400 hover:border-l-[1rem] transition-all hover:font-black'>Food</div>
-                    <div className='w-auto h-1/9 aspect-square bg-red-300 cursor-pointer grid content-center justify-items-center border-red-400 hover:border-l-[1rem] transition-all hover:font-black'>Food</div>
-                    <div className='w-auto h-1/9 aspect-square bg-red-300 cursor-pointer grid content-center justify-items-center border-red-400 hover:border-l-[1rem] transition-all hover:font-black'>Food</div>
+                    <div className='w-auto h-1/9 aspect-square bg-red-300 cursor-pointer grid content-center justify-items-center border-red-400 hover:border-l-[1rem] transition-all hover:font-black font-semibold' onClick={()=>provide("f")}>Food</div>
+                    <div className='w-auto h-1/9 aspect-square bg-red-300 cursor-pointer grid content-center justify-items-center border-red-400 hover:border-l-[1rem] transition-all hover:font-black font-semibold' onClick={()=>provide("w")}>Water</div>
+                    <div className='w-auto h-1/9 aspect-square bg-red-300 cursor-pointer grid content-center justify-items-center border-red-400 hover:border-l-[1rem] transition-all hover:font-black font-semibold' onClick={()=>provide("m")}>Medical care</div>
+                    <div className='w-auto h-1/9 aspect-square bg-red-300 cursor-pointer grid content-center justify-items-center border-red-400 hover:border-l-[1rem] transition-all hover:font-black font-semibold' onClick={()=>provide("p")}>Power</div>
+                    <div className='w-auto h-1/9 aspect-square bg-red-300 cursor-pointer grid content-center justify-items-center border-red-400 hover:border-l-[1rem] transition-all hover:font-black font-semibold' onClick={()=>provide("SOS")}>SOS</div>
                     <div ></div>
                 </div>
                 <div className=' h-full w-full bg-green-50 grid grid-cols-1 overflow-y-scroll'>
-                    <div className='w-full h-[20%] m-[1rem_0_0_1rem] rounded-l-2xl bg-amber-300 grid content-center justify-items-end grid-cols-1 grid-rows-1'>
-                        <div className='w-[99%] h-full bg-amber-100 rounded-l-2xl  grid overflow-hidden grid-cols-[20%_80%] grid-rows-1'><div className='grid grid-cols-1 grid-rows-3'><div className='p-2 font-black'>Name:</div><div className='p-2 font-black'>Requirement:</div><div className='p-2 text-red-500 font-black justify-self-center cursor-pointer'>Report Completion</div></div> <iframe src={`https://www.google.com/maps/embed?pb=!1m17!1m12!1m3!1d${152.87405777*200*Math.cos(coords.longitude)}!2d69.997419713793!3d69.99999998132672!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m2!1m1!2zNzDCsDAwJzAwLjAiTiA3MMKwMDAnMDAuMCJF!5e0!3m2!1sen!2sin!4v1780721032641!5m2!1sen!2sin`} className='w-full h-full rounded-l-2xl' allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade"/></div>
+                    {
+                        SOSpulledData.map((e,i)=> {
+
+                            const loc=e.split(" ")
+
+                            return <div className='w-full h-[20%] m-[1rem_0_0_1rem] rounded-l-2xl bg-amber-300 grid content-center justify-items-end grid-cols-1 grid-rows-1'>
+                        <div className='w-[99%] h-full bg-amber-100 rounded-l-2xl  grid overflow-hidden grid-cols-[20%_80%] grid-rows-1'><div className='w-full h-full grid content-center text-center font-black text-red-500'>SOS request at:<br/>{loc.at(1)} N, {loc.at(0)} E</div><iframe src={`https://www.google.com/maps/embed?pb=!1m17!1m12!1m3!1d${152.87405777*200*Math.cos(loc.at(1))}!2d${loc.at(1)}!3d${loc.at(0)}!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m2!1m1!2zNzDCsDAwJzAwLjAiTiA3MMKwMDAnMDAuMCJF!5e0!3m2!1sen!2sin!4v1780721032641!5m2!1sen!2sin`} className='w-full h-full rounded-l-2xl' allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade"/></div></div>
+                        })
+                            }
+                    {(!pulledData===[])?(pulledData.map((e,i)=> {
+                        
+                        let need = e.need
+
+                        if(e.need=="f"){
+                            need = "Food"
+                        }else if(e.need=="w"){
+                            need = "Water"
+                        }else if(e.need=="m"){
+                            need = "Medicine"
+                        }else if(e.need=="p"){
+                            need = "Power"
+                        }
+
+                        const want = e.want
+                        const loc = e.location
+                        let status = e.status
+
+                        if(status=="a"){
+                            status="Active Query"
+                        }else{
+                            status="Might already be fulfilled"
+                        }
+
+                        return <div className='w-full h-[20%] m-[1rem_0_0_1rem] rounded-l-2xl bg-amber-300 grid content-center justify-items-end grid-cols-1 grid-rows-1'>
+                        <div className='w-[99%] h-full bg-amber-100 rounded-l-2xl  grid overflow-hidden grid-cols-[20%_80%] grid-rows-1'><div className='grid grid-cols-1 grid-rows-3'><div className='p-2 '><span className='font-black'>Discription: </span>{want}</div><div className='p-2'><span className='font-black'>Needs: </span>{need}</div><div className='p-2'><span className='font-black'>Status: </span>{status}</div><div className='p-2 text-red-500 font-black justify-self-center cursor-pointer' onClick={()=>del(e.need, [loc.at(0),loc.at(1)])}>Report Completion</div></div> <iframe src={`https://www.google.com/maps/embed?pb=!1m17!1m12!1m3!1d${152.87405777*200*Math.cos(loc.at(1))}!2d${loc.at(1)}!3d${loc.at(0)}!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m2!1m1!2zNzDCsDAwJzAwLjAiTiA3MMKwMDAnMDAuMCJF!5e0!3m2!1sen!2sin!4v1780721032641!5m2!1sen!2sin`} className='w-full h-full rounded-l-2xl' allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade"/></div>
                     </div>
+                    })):(<div className='w-full h-full text-center grid content-center text-4xl'>No other requests at this time</div>)}
                 </div>
                 </div>)}
         
@@ -98,7 +169,7 @@ const App = ()=>{
     </div>):(
         <div className='w-full h-[200%] grid grid-cols-1 grid-rows-2 content-center justify-items-center'>
             <div className='absolute left-0 p-4 font-bold font-mono'>HelpCentral.</div>
-            <div className='w-full h-screen grid content-center justify-items-center'><div className='w-[80%] h-auto aspect-square bg-red-500 grid content-center justify-items-center rounded-full font-black text-3xl text-white' onClick={()=>sos()}>SOS</div></div>
+            <div className='w-full h-screen grid content-center justify-items-center'><div className='w-[80%] aspect-square bg-red-500 grid content-center justify-items-center rounded-full font-black text-3xl text-white' onClick={()=>sos()}>SOS</div></div>
             <div className='absolute bottom-0 text-center font-semibold p-4 w-[90%] rounded-t-2xl bg-amber-100'>Need help with something specific?<br/>Scroll down</div>
             <div className='w-full h-screen bg-amber-100 grid grid-cols-1 grid-rows-1 content-center items-center justify-items-center'><div className='w-[90%] h-[80%] rounded-2xl justify-self-center content-center bg-amber-50'>
                 <form className="w-full h-full" onSubmit={submitWant} method="POST">
@@ -123,18 +194,46 @@ const App = ()=>{
             <div className='absolute top-[200%] -translate-y-full text-center font-semibold p-4 w-[50%] rounded-t-2xl bg-green-100'>Want to help?<br/>Scroll down</div>
             <div className='w-full h-screen bg-green-100 grid items-center justify-items-center'>{ (!hasPulled)?(
                 <div className='w-[90%] h-[95%] bg-emerald-200 rounded-2xl overflow-hidden grid grid-cols-1 grid-rows-4'>
-                <div className='w-full h-full bg-red-100 text-center content-center grid font-black text-2xl'>Food</div>
-                <div className='w-full h-full bg-blue-100 text-center content-center grid font-black text-2xl'>Water</div>
-                <div className='w-full h-full bg-green-200 text-center content-center grid font-black text-2xl'>Medicine</div>
-                <div className='w-full h-full bg-purple-100 text-center content-center grid font-black text-2xl'>Power</div>
+                <div className='w-full h-full bg-red-100 text-center content-center grid font-black text-2xl' onClick={()=>provide("f")}>Food</div>
+                <div className='w-full h-full bg-blue-100 text-center content-center grid font-black text-2xl' onClick={()=>provide("w")}>Water</div>
+                <div className='w-full h-full bg-green-200 text-center content-center grid font-black text-2xl' onClick={()=>provide("m")}>Medicine</div>
+                <div className='w-full h-full bg-purple-100 text-center content-center grid font-black text-2xl' onClick={()=>provide("p")}>Power</div>
                 </div>
             ):(<div className='w-[90%] h-[95%] bg-emerald-200 rounded-2xl overflow-hidden grid grid-cols-1 grid-rows-[10%_90%]'>
-                <div className='w-full h-full bg-amber-100 flex'>
-                    <div>Back</div>
-                    <div>Currently on: </div>
+                <div className='w-full h-full bg-amber-100 flex justify-between items-center'>
+                    <div className='p-4'><span className='font-semibold'>Currently on:</span><br/>{pulledFor}</div>
+                    <div className='m-4 bg-red-200 w-fit h-fit p-4 font-semibold rounded-md' onClick={()=>setPulled(false)}>Back</div>
                 </div>
                 <div className='w-full h-full overflow-y-scroll grid grid-cols-1 justify-items-center'>
-                    <div className='w-full h-fit bg-gray-100 grid grid-cols-1'><div>Name</div><iframe src={`https://www.google.com/maps/embed?pb=!1m17!1m12!1m3!1d${152.87405777*200*Math.cos(coords.longitude)}!2d69.997419713793!3d69.99999998132672!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m2!1m1!2zNzDCsDAwJzAwLjAiTiA3MMKwMDAnMDAuMCJF!5e0!3m2!1sen!2sin!4v1780721032641!5m2!1sen!2sin`} className='w-[70%] m-4 rounded-2xl h-auto aspect-square justify-self-center' allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade"/></div>
+                    {
+                        SOSpulledData.map((e,i)=> {
+
+                            const loc=e.split(" ")
+
+                            return <div key={i} className='w-[98%] m-4 rounded-2xl h-fit bg-gray-100 grid grid-cols-1 p-4'><div className='w-full h-full grid content-center text-center font-black text-red-500'>SOS request at:<br/>{loc.at(1)} N, {loc.at(0)} E</div><iframe src={`https://www.google.com/maps/embed?pb=!1m17!1m12!1m3!1d${152.87405777*200*Math.cos(loc.at(1))}!2d${loc.at(1)}!3d${loc.at(0)}!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m2!1m1!2zNzDCsDAwJzAwLjAiTiA3MMKwMDAnMDAuMCJF!5e0!3m2!1sen!2sin!4v1780721032641!5m2!1sen!2sin`} className='w-[70%] m-4 rounded-2xl h-auto aspect-square justify-self-center' allowFullScreen loading="lazy" referrerPolicy="no-referrer-when-downgrade"/></div>
+                        })
+                            }
+                    
+                    {(!pulledData===[])?(pulledData.map((e,i)=> {
+                        
+                        let need = e.need
+
+                        if(e.need=="f"){
+                            need = "Food"
+                        }else if(e.need=="w"){
+                            need = "Water"
+                        }else if(e.need=="m"){
+                            need = "Medicine"
+                        }else if(e.need=="p"){
+                            need = "Power"
+                        }
+
+                        const want = e.want
+                        const loc = e.location
+                        const status = e.status
+
+                        return <div key={i} className='w-[98%] m-4 rounded-2xl h-fit bg-gray-100 grid grid-cols-1 p-4'><div className='w-full h-full p-[0_0_1rem]'><span className='font-bold'>Discription: </span>{want}</div><div className='p-0'><span className='font-bold'>Need: </span>{need}</div><div className='p-[1rem_0]'><span className='font-bold'>Status:</span> {status}</div><iframe src={`https://www.google.com/maps/embed?pb=!1m17!1m12!1m3!1d${152.87405777*200*Math.cos(loc.at(1))}!2d${loc.at(1)}!3d${loc.at(0)}!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m2!1m1!2zNzDCsDAwJzAwLjAiTiA3MMKwMDAnMDAuMCJF!5e0!3m2!1sen!2sin!4v1780721032641!5m2!1sen!2sin`} className='w-[70%] m-4 rounded-2xl h-auto aspect-square justify-self-center' allowFullScreen loading="lazy" referrerPolicy="no-referrer-when-downgrade"/><div className='justify-self-center w-fit text-center font-bold h-full p-4 bg-red-400 rounded-full ' onClick={()=>del(e.need, [loc.at(0),loc.at(1)])}>Report Completion</div></div>
+                    })):(<div className='grid content-center text-xl'>No other requests at the moment.</div>)}
                 </div>
             </div>) }</div>
         </div>)

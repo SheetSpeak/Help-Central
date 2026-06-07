@@ -27,19 +27,33 @@ app.post("/posts/SOS",(req,res)=>{
     res.json({accepted:true})
 })
 
-const tempAsyncFunc = async (file,e)=>{
-    const fileData = await fsp.readFile(path.join(file,e),'utf8',(err)=>console.error(err))
-    return fileData
-}
 
 const read = async (file,loc,res)=>{
-    const final ={data:[]}
+    const final =[]
+    const SOSfinal=[]
     try {
-        const dirNames = await fsp.readdir(file);
+        const needFiles = await fsp.readdir(file);
+        const SOSFiles=await fsp.readdir(path.join(__dirname,"Requests/SOS"))
 
-        if (dirNames.length > 0) {
+        if (needFiles.length > 0||SOSFiles.length>0) {
             
-            for (const fileName of dirNames) {
+            for (const fileName of SOSFiles) {
+                const place = path.basename(fileName, ".txt").split(" ");
+                
+                const fileLat = parseFloat(place[0])
+                const fileLng = parseFloat(place[1])
+                const targetLat = parseFloat(loc[0])
+                const targetLng = parseFloat(loc[1])
+
+                const distance = Math.sqrt(Math.pow(fileLat - targetLat, 2) + Math.pow(fileLng - targetLng, 2))
+
+                if (distance <= 0.1) {
+                    const fileContent = await fsp.readFile(path.join(__dirname,"Requests/SOS", fileName), 'utf8')
+                    SOSfinal.push(fileContent);
+                }
+                
+            }
+            for (const fileName of needFiles) {
                 const place = path.basename(fileName, ".txt").split(" ");
                 
                 const fileLat = parseFloat(place[0])
@@ -51,11 +65,13 @@ const read = async (file,loc,res)=>{
 
                 if (distance <= 0.1) {
                     const fileContent = await fsp.readFile(path.join(file, fileName), 'utf8')
-                    final.data.push(fileContent);
+                    final.push(fileContent);
                 }
             }
 
-            res.json(final)
+            const send = {data:final,SOSdata:SOSfinal}
+
+            res.json(send)
 
         } else {
             res.json({ req: null })
@@ -72,5 +88,21 @@ app.post("/posts/provide",(req,res)=>{
     read(path.join(__dirname,'Requests',req.body.p),req.body.loc,res)
 })
 
+
+const asyncRead = async (req,res)=>{
+    const readFile = await fsp.readFile(path.join(__dirname,"Requests",req.body.need,`${req.body.file}.txt`),"utf-8")
+    if(JSON.parse(readFile).status=="a"){
+        const newData={...JSON.parse(readFile),status:"m"}
+        fs.writeFile(path.join(__dirname,"Requests",req.body.need,`${req.body.file}.txt`),JSON.stringify(newData),"utf8",(err)=>console.error(err))
+    }else{
+        fs.unlink(path.join(__dirname,"Requests",req.body.need,`${req.body.file}.txt`),(err)=>console.log(err))
+    }
+    res.json({heh:"heh"})
+
+}
+
+app.post("/posts/delete",(req,res)=>{
+    asyncRead(req,res)
+})
 
 app.listen(5000,'0.0.0.0',()=>console.log("listening on 5000"))
